@@ -1,0 +1,6 @@
+<view class='container-box'>
+    <mlvb-live-room id="id_liveroom" roomid="{{roomID}}" role="{{role}}"
+                    roomname="{{roomName}}" pureaudio="{{pureAudio}}" debug="{{debug}}" muted="{{muted}}"
+                    beauty="{{beauty}}" template="float">
+    </mlvb-live-room>
+</view>

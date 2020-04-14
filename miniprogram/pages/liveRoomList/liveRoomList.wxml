@@ -1,0 +1,12 @@
+<view class="content">
+    <view wx:if="{{inReview}}" bindtap="jumpToLive" data-value="-1">
+        <app-live-room-item-card roomData="{{inReviewData}}"></app-live-room-item-card>
+    </view>
+    <view wx:else>
+        <view class="room-list" wx:for="{{roomList}}" wx:for-item="item" wx:for-index="index" wx:key="index" bindtap="jumpToLive" data-value="{{index}}">
+            <app-live-room-item-card roomData="{{item}}"></app-live-room-item-card>
+        </view>
+    </view>
+
+    <van-toast id="van-toast" />
+</view>
