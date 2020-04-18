@@ -682,7 +682,7 @@ function innerMergerAnchors(data) {
             pushers: enterPushers
         });
         //混流
-        mergeStream(1);
+        mergeStream(10);
     }
     // 通知有人退出房间
     if (leavePushers.length) {
@@ -691,7 +691,7 @@ function innerMergerAnchors(data) {
             pushers: leavePushers
         });
         //混流
-        mergeStream(1);
+        mergeStream(10);
     }
 }
 
@@ -1545,16 +1545,16 @@ function doMergeRequest(mergeInfo, callback) {
 function createMergeInfo(mergeStreams) {
     console.log("混流原始信息:", JSON.stringify(mergeStreams));
 
-    let smallAnchorWidth = 162;
-    let smallAnchorHeight = 288;
-    let offsetHeight = 96;
-    let offsetWidth = 15
-    if (bigAnchorWidth < 540 || bigAnchorHeight < 960) {
-        smallAnchorWidth = 126;
-        smallAnchorHeight = 224;
-        offsetHeight = 64;
-        offsetWidth = 10
-    }
+    let smallAnchorWidth = 0.3;
+    let smallAnchorHeight = 0.375;
+    let offsetHeight = 0.15
+    let offsetWidth = 0.55
+    // if (bigAnchorWidth < 540 || bigAnchorHeight < 960) {
+    //     smallAnchorWidth = 126;
+    //     smallAnchorHeight = 224;
+    //     offsetHeight = 96;
+    //     offsetWidth = 15
+    // }
 
     //组装混流JSON结构体
     var streamInfoArray = [];
@@ -1570,7 +1570,7 @@ function createMergeInfo(mergeStreams) {
         streamInfoArray.push(bigAnchorInfo);
 
         //小主播
-        var subLocationX = bigAnchorWidth - smallAnchorWidth - offsetWidth * 2;
+        var subLocationX = offsetWidth;
         var subLocationY = offsetHeight;
         if (mergeStreams && mergeStreams.length > 0) {
             var layerIndex = 0
@@ -1580,10 +1580,10 @@ function createMergeInfo(mergeStreams) {
                     input_stream_id: val.streamID,
                     layout_params: {
                         image_layer: layerIndex + 2,
-                        image_width: smallAnchorWidth,
-                        image_height: smallAnchorHeight,
+                        // image_width: smallAnchorWidth,
+                        // image_height: smallAnchorHeight,
                         location_x: subLocationX,
-                        location_y: subLocationY + layerIndex * smallAnchorHeight
+                        location_y: subLocationY
                     }
                 }
                 streamInfoArray.push(smallAchorInfo);

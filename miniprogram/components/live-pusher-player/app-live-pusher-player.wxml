@@ -1,7 +1,7 @@
 <view>
     <view class="{{linkPusherInfo.url || isCaster ? 'v-full2': 'v-full'}}">
         <view wx:if="{{isCaster}}" class='v-main-video'>
-            <live-pusher id="pusher" mode="{{mode}}" url="{{mainPusherInfo.url}}"
+            <live-pusher id="pusher" mode="FHD" url="{{mainPusherInfo.url}}"
                          min-bitrate="{{mainPusherInfo.minBitrate}}" max-bitrate="{{mainPusherInfo.maxBitrate}}"
                          beauty="{{beauty}}" enable-camera="{{!pureaudio}}" muted="{{muted}}"
                          aspect="9:16"

@@ -53,6 +53,7 @@ Component({
         },
 
         onMainPush(event) {
+            console.log('播放状态发生变化: ', event)
             this.triggerEvent('mainPushEvent', event)
         },
 

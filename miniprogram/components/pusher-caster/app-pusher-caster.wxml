@@ -67,18 +67,23 @@
     <van-action-sheet bgColor="{{bgColor}}" show="{{ show }}" overlay="{{false}}" bind:close="onCloseSheet">
         <view class="sheet-content f-c-je-ac">
             <view class="sheet-title f-js-ac">当前有 {{linkWiteList.length}} 人申请连麦</view>
-            <view class="join-item f-jb-ac" wx:for="{{linkWiteList}}" wx:for-item="item" wx:for-index="index" wx:key="index">
-                <view class="f-js-ac">
-                    <view class="item-index">{{index + 1}}</view>
-                    <image class="item-user-img" src="{{item.avatar}}"></image>
-                    <view class="item-user-info f-c-js-ac">
-                        <view class="item-user-name">{{item.nick}}</view>
-                        <view class="item-join-type">视频申请</view>
+            <view class="join-item f-c-js-ac" wx:for="{{linkWiteList}}" wx:for-item="item" wx:for-index="index" wx:key="index">
+                <view class="item-info f-jb-ac">
+                    <view class="f-js-ac">
+                        <view class="item-index">{{index + 1}}</view>
+                        <image class="item-user-img" src="{{item.avatar}}"></image>
+                        <view class="item-user-info f-c-js-ac">
+                            <view class="item-user-name">{{item.nick}}</view>
+                            <view class="item-join-type">视频申请</view>
+                        </view>
+                    </view>
+                    <view class="f-je-ac">
+                        <view class="item-resove f-jc-ac" bindtap="onResolveLinkEvent" data-value="{{item}}">接受</view>
+                        <view class="item-reject f-jc-ac" bindtap="onRejectLinkEvent" data-value="{{item}}">拒绝</view>
                     </view>
                 </view>
-                <view class="f-je-ac">
-                    <view class="item-resove f-jc-ac" bindtap="onResolveLinkEvent" data-value="{{item}}">接受</view>
-                    <view class="item-reject f-jc-ac" bindtap="onRejectLinkEvent" data-value="{{item}}">拒绝</view>
+                <view class="item-tag-content f-js-ac-w">
+                    <view class="sub-item f-jc-ac" wx:for="{{item.userTags}}" wx:for-item="subItem" wx:for-index="subIndex" wx:key="subIndex">{{subItem.tagName}}</view>
                 </view>
             </view>
             <view class="hidden-close-sheet f-jc-ac" bind:tap="onCloseSheet">关闭</view>

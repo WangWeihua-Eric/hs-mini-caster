@@ -200,6 +200,10 @@
     width: 100%;
 }
 
+.item-info {
+    width: 100%;
+}
+
 .item-index {
     font-size:30rpx;
     font-family:PingFangSC-Medium,PingFang SC;
@@ -253,4 +257,21 @@
     font-weight:500;
     color:rgba(255,255,255,1);
     margin-left: 14rpx;
+}
+
+.item-tag-content {
+    box-sizing: border-box;
+    padding: 14rpx 0 14rpx 140rpx;
+    width: 100%;
+}
+
+.sub-item {
+    box-sizing: border-box;
+    padding: 5rpx 25rpx;
+    background:rgba(120,120,120, 0.26);
+    border-radius:23rpx;
+    font-size:28rpx;
+    font-family:SourceHanSansCN-Normal,SourceHanSansCN;
+    color:rgba(255,255,255,1);
+    margin: 5rpx 10rpx 5rpx 0;
 }

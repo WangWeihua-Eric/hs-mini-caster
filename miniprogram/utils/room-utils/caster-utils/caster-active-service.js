@@ -115,4 +115,18 @@ export class CasterActiveService {
             webimhandler.sendCustomMsg({data: strCustomMsg, text: "notify"}, null)
         }, 500)
     }
+
+    /**
+     * 发送挂断通知
+     */
+    sendCloseLink() {
+        const customMsg = {
+            cmd: "CasterCloseLink",
+            data: {}
+        }
+        const strCustomMsg = JSON.stringify(customMsg);
+        setTimeout(() => {
+            webimhandler.sendCustomMsg({data: strCustomMsg, text: "notify"}, null)
+        }, 3000)
+    }
 }

@@ -87,6 +87,8 @@ Component({
                 })
                 if (!inLink) {
                     userBase.setGlobalData({preLinkUserInfo: {}})
+                } else {
+                    this.onCloseCanLink()
                 }
                 const show = inLink ? false : this.data.show
                 this.setData({
@@ -119,6 +121,11 @@ Component({
                 })
                 userBase.setGlobalData({preLinkUserInfo: {}})
                 this.rejectLink(userId)
+            }
+        },
+        "inLink": function(inLink) {
+            if (!inLink) {
+                casterActiveService.sendCloseLink()
             }
         }
     },
@@ -268,7 +275,8 @@ Component({
             }).catch(() => {
                 wx.showModal({
                     title: '连麦权限开启失败',
-                    content: '请重试打开连麦权限'
+                    content: '请重试打开连麦权限',
+                    showCancel: false
                 })
             })
         },
@@ -283,6 +291,11 @@ Component({
                     title: '连麦权限关闭失败',
                     content: '请重试关闭连麦权限'
                 })
+            })
+
+            const linkWiteList = this.data.linkWiteList
+            linkWiteList.forEach(item => {
+                roomService.teacherLinkmicPop(userBase.getGlobalData().sessionId, userBase.getGlobalData().roomId, item.userId).then(() => {}).catch(() => {})
             })
         }
     }
