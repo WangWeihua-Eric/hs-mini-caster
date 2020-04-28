@@ -912,7 +912,6 @@ function sendCustomMsg(msg, callback) {
         subType = webim.C2C_MSG_SUB_TYPE.COMMON;
     }
 
-    console.log('11122333444: ', loginInfo)
     var msg = new webim.Msg(selSess, isSend, seq, random, msgTime, loginInfo.identifier, subType, loginInfo.identifierNick);
 
     var custom_obj = new webim.Msg.Elem.Custom(data, desc, ext);
@@ -956,10 +955,11 @@ function sendCustomMsg(msg, callback) {
         }
         webim.Log.info("发自定义消息成功");
         console.log('发自定义消息成功');
-        callback && callback();
+
     }, function (err) {
         webim.Log.info(err.ErrorInfo);
         console.log('发自定义消息失败:', err);
+        callback && callback();
     });
 }
 

@@ -1,4 +1,10 @@
+import {RoomService} from "../../service/roomService";
+import {UserBase} from "../../utils/user-utils/user-base";
+
 const app = getApp()
+
+const roomService = new RoomService()
+const userBase = new UserBase()
 
 Component({
     /**
@@ -35,18 +41,49 @@ Component({
     observers: {
         "pusherStatus": function (pusherStatus) {
             console.log("pusherStatus: ", pusherStatus)
-        }
+        },
+
+        "members": function (members) {
+            if(members && members.length) {
+                let inLink = false
+                members.forEach(item => {
+                    if (item.accelerateURL) {
+                        inLink = true
+                    }
+                })
+                if (inLink) {
+                    this.setUserSelectColor()
+                } else {
+                    this.setData({
+                        userSelectColor: ''
+                    })
+                }
+            } else {
+                this.setData({
+                    userSelectColor: ''
+                })
+            }
+        },
     },
 
     /**
      * 组件的初始数据
      */
-    data: {},
+    data: {
+        userSelectColor: ''
+    },
 
     /**
      * 组件的方法列表
      */
     methods: {
+        setUserSelectColor() {
+            roomService.getUserSelectColor(userBase.getGlobalData().sessionId, userBase.getGlobalData().preLinkUserInfo.userID, userBase.getGlobalData().roomId).then(res => {
+                this.setData({
+                    userSelectColor: res[0].tagName
+                })
+            })
+        },
         onSendTextMsg(event) {
             const param = event.detail
             this.triggerEvent('sendTextMsgEvent', param)
@@ -112,9 +149,12 @@ Component({
             this.triggerEvent('kickoutJoinAnchorEvent', param)
         },
 
-        onOpLinkEvent(event) {
-            const params = event.detail
-            this.triggerEvent('opLinkEvent', params)
+        onOpLinkEvent() {
+            this.triggerEvent('opLinkEvent')
+        },
+
+        onLivePlayerStatusEvent(event) {
+            console.log('拉流网络状态: ', event.info)
         }
     }
 })

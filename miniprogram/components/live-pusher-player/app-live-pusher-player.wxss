@@ -16,6 +16,7 @@
 .v-sub-video {
     width: 260rpx;
     height: 330rpx;
+    position: relative;
 }
 
 .v-sub-video-list {
@@ -27,6 +28,17 @@
     top: 160rpx;
     overflow: hidden;
     flex-direction: column-reverse;
+}
+
+.user-select-color {
+    width:32rpx;
+    height:32rpx;
+    border:2rpx solid rgba(255,255,255,0.6);
+    position: absolute;
+    bottom: 10rpx;
+    right: 6rpx;
+    border-radius: 50%;
+    overflow: hidden;
 }
 
 .v-border {

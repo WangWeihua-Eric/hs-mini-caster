@@ -1,7 +1,7 @@
 <view>
     <view class="{{linkPusherInfo.url || isCaster ? 'v-full2': 'v-full'}}">
         <view wx:if="{{isCaster}}" class='v-main-video'>
-            <live-pusher id="pusher" mode="FHD" url="{{mainPusherInfo.url}}"
+            <live-pusher id="pusher" mode="HD" url="{{mainPusherInfo.url}}"
                          min-bitrate="{{mainPusherInfo.minBitrate}}" max-bitrate="{{mainPusherInfo.maxBitrate}}"
                          beauty="{{beauty}}" enable-camera="{{!pureaudio}}" muted="{{muted}}"
                          aspect="9:16"
@@ -27,11 +27,12 @@
     </view>
 
     <view wx:if="{{linkPusherInfo.url || isCaster}}" class='v-sub-video-list'>
-        <view class='.v-sub-video' wx:for="{{members}}" wx:key="{{item.userID}}">
+        <view class='.v-sub-video' wx:for="{{members}}" wx:for-index="index" wx:key="index">
             <live-player wx:if="{{item.accelerateURL}}" id="{{item.userID}}" autoplay mode="RTC" object-fit="fillCrop"
                          min-cache="0.1" max-cache="0.3" src="{{item.accelerateURL}}" debug="{{debug}}"
-                         background-mute="{{true}}">
+                         background-mute="{{true}}" bindnetstatus="onLivePlayerStatusEvent">
             </live-player>
+            <view wx:if="{{item.accelerateURL && userSelectColor}}" class="user-select-color" style="background:{{userSelectColor}}"></view>
         </view>
     </view>
 </view>

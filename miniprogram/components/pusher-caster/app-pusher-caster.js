@@ -10,6 +10,9 @@ const app = getApp()
 const roomService = new RoomService()
 const userBase = new UserBase()
 const casterActiveService = new CasterActiveService()
+let timeHandler = null
+let resolveLinkTimeHandler = null
+let time = 0
 
 Component({
     /**
@@ -41,13 +44,15 @@ Component({
         linkWiteList: [],
         canLink: false,
         inReview: false,
+        timeDes: '',
+        notWaitLink: true
     },
 
     observers: {
         "linkOk": function (linkOk) {
             if (linkOk) {
                 setTimeout(() => {
-                    if(!this.data.inLink) {
+                    if (!this.data.inLink) {
                         this.onCloseLink()
                         wx.showModal({
                             content: '对方网络差，连麦失败',
@@ -57,8 +62,8 @@ Component({
                 }, 10000)
             }
         },
-        "roomTextList": function(roomTextList) {
-            if(roomTextList && roomTextList.length) {
+        "roomTextList": function (roomTextList) {
+            if (roomTextList && roomTextList.length) {
                 const id = `text-${roomTextList.length - 1}`
                 this.setData({
                     toIndex: id
@@ -66,9 +71,9 @@ Component({
             }
         },
         "showMessage": function (showMessage) {
-            if(showMessage) {
+            if (showMessage) {
                 const roomTextList = this.data.roomTextList
-                if(roomTextList && roomTextList.length) {
+                if (roomTextList && roomTextList.length) {
                     const id = `text-${roomTextList.length - 1}`
                     this.setData({
                         toIndex: id
@@ -78,7 +83,7 @@ Component({
         },
         "members": function (members) {
             this.updateLinkWiteList()
-            if(members && members.length) {
+            if (members && members.length) {
                 let inLink = false
                 members.forEach(item => {
                     if (item.accelerateURL) {
@@ -86,9 +91,13 @@ Component({
                     }
                 })
                 if (!inLink) {
+                    if (userBase.getGlobalData().preLinkUserInfo && userBase.getGlobalData().preLinkUserInfo.userID) {
+                        this.linkmicEvent('hungup')
+                    }
                     userBase.setGlobalData({preLinkUserInfo: {}})
                 } else {
                     this.onCloseCanLink()
+                    this.linkmicEvent('callup')
                 }
                 const show = inLink ? false : this.data.show
                 this.setData({
@@ -96,6 +105,9 @@ Component({
                     show: show
                 })
             } else {
+                if (userBase.getGlobalData().preLinkUserInfo && userBase.getGlobalData().preLinkUserInfo.userID) {
+                    this.linkmicEvent('hungup')
+                }
                 userBase.setGlobalData({preLinkUserInfo: {}})
                 this.setData({
                     inLink: false
@@ -119,19 +131,42 @@ Component({
                 this.setData({
                     linkWiteList: list
                 })
+                if (userBase.getGlobalData().preLinkUserInfo && userBase.getGlobalData().preLinkUserInfo.userID) {
+                    this.linkmicEvent('hungup')
+                }
                 userBase.setGlobalData({preLinkUserInfo: {}})
                 this.rejectLink(userId)
             }
         },
-        "inLink": function(inLink) {
+        "inLink": function (inLink) {
             if (!inLink) {
-                casterActiveService.sendCloseLink()
+                casterActiveService.sendCloseLink();
+                if (timeHandler) {
+                    clearTimeout(timeHandler)
+                    timeHandler = null
+                    time = 0
+                }
+                if (resolveLinkTimeHandler) {
+                    clearTimeout(resolveLinkTimeHandler)
+                    resolveLinkTimeHandler = null
+                }
+                this.clearLink()
+            } else {
+                this.setData({
+                    notWaitLink: true
+                })
+                if (!timeHandler) {
+                    this.loopTime()
+                }
             }
         }
     },
 
     pageLifetimes: {
         show() {
+            if (userBase.getGlobalData().preLinkUserInfo && userBase.getGlobalData().preLinkUserInfo.userID) {
+                this.linkmicEvent('hungup')
+            }
             userBase.setGlobalData({
                 preLinkUserInfo: {}
             })
@@ -154,6 +189,34 @@ Component({
      * 组件的方法列表
      */
     methods: {
+        clearLink() {
+            roomService.querylinkmicOnmicList(userBase.getGlobalData().sessionId, userBase.getGlobalData().roomId).then(res => {
+                if (res && res.length) {
+                    let list = []
+                    res.forEach(item => {
+                        list.push(item.userId)
+                    })
+                    if (!(list && list.length)) {
+                        list = null
+                    }
+                    this.linkmicEvent('hungup', list)
+                }
+            })
+        },
+        loopTime() {
+            timeHandler = setTimeout(() => {
+                time++
+                let timeDes = ''
+                timeDes = time / 60
+                timeDes = parseInt(timeDes.toString()) + ' 分 '
+                const secend = time % 60
+                timeDes = timeDes + secend + ' 秒 '
+                this.setData({
+                    timeDes: timeDes
+                })
+                this.loopTime()
+            }, 1000)
+        },
         rejectLink(userId) {
             roomService.teacherLinkmicPop(userBase.getGlobalData().sessionId, userBase.getGlobalData().roomId, userId).then(() => {
                 this.updateLinkWiteList()
@@ -161,6 +224,17 @@ Component({
         },
         updateLinkWiteList() {
             casterActiveService.updateLinkList().then(linkWiteList => {
+                if (linkWiteList && linkWiteList.length) {
+                    linkWiteList.forEach(item => {
+                        if (item && item.userTags && item.userTags.length) {
+                            item.userTags.forEach(subItem => {
+                                if (subItem.tagName.indexOf('#') > -1) {
+                                    subItem.color = subItem.tagName
+                                }
+                            })
+                        }
+                    })
+                }
                 this.setData({
                     linkWiteList: linkWiteList ? linkWiteList : []
                 })
@@ -197,13 +271,13 @@ Component({
             })
         },
         onChangeBeauty() {
-            if(debounceForFunction()) {
+            if (debounceForFunction()) {
                 return
             }
             this.triggerEvent('changeBeautyEvent')
         },
         onSwitchCameraEvent() {
-            if(debounceForFunction()) {
+            if (debounceForFunction()) {
                 return
             }
             const frontCamera = this.data.frontCamera
@@ -213,22 +287,62 @@ Component({
             this.triggerEvent('switchCameraEvent')
         },
         onCloseSheet() {
-            this.setData({ show: false });
+            this.setData({show: false});
         },
 
         onShowSheet() {
             this.updateLinkWiteList()
-            this.setData({ show: true });
+            this.setData({show: true});
         },
         onResolveLinkEvent(event) {
+            this.setData({
+                show: false
+            })
+            if (userBase.getGlobalData().preLinkUserInfo && userBase.getGlobalData().preLinkUserInfo.userID) {
+                this.onCloseLink()
+                wx.showModal({
+                    content: '正在等待当前用户处理连麦，接通或挂断后再处理下一个人',
+                    showCancel: false
+                })
+                return
+            }
+
+            this.setData({
+                notWaitLink: false
+            })
+
             const userInfo = event.currentTarget.dataset.value
             const userID = userInfo.userId
             const userName = userInfo.nick
             const userAvatar = userInfo.avatar
-            this.setData({
-                show: false
+
+            const preLinkUserInfo = {
+                userID: userID,
+                userName: userName,
+                userAvatar: userAvatar
+            }
+
+            userBase.setGlobalData({
+                preLinkUserInfo: preLinkUserInfo
             })
-            casterActiveService.resolveLink(userID, userName, userAvatar)
+
+            this.triggerEvent('opLinkEvent')
+            this.rejectLink(userID)
+            if (resolveLinkTimeHandler) {
+                clearTimeout(resolveLinkTimeHandler)
+            }
+            resolveLinkTimeHandler = setTimeout(() => {
+                if (!this.data.inLink) {
+                    this.onCloseLink()
+                    this.setData({
+                        notWaitLink: true
+                    })
+                    wx.showModal({
+                        content: '对方网络差，连麦失败',
+                        showCancel: false
+                    })
+                }
+            }, 25000)
         },
         onRejectLinkEvent(event) {
             if (userBase.getGlobalData().preLinkUserInfo.userID) {
@@ -253,6 +367,9 @@ Component({
             const closeUser = userBase.getGlobalData().preLinkUserInfo
             if (closeUser) {
                 this.triggerEvent('onCloseLinkEvent', closeUser)
+            }
+            if (userBase.getGlobalData().preLinkUserInfo && userBase.getGlobalData().preLinkUserInfo.userID) {
+                this.linkmicEvent('hungup')
             }
             userBase.setGlobalData({
                 preLinkUserInfo: null
@@ -295,8 +412,26 @@ Component({
 
             const linkWiteList = this.data.linkWiteList
             linkWiteList.forEach(item => {
-                roomService.teacherLinkmicPop(userBase.getGlobalData().sessionId, userBase.getGlobalData().roomId, item.userId).then(() => {}).catch(() => {})
+                const userID = item.userId
+                const userName = item.nick
+                const userAvatar = item.avatar
+                casterActiveService.rejectLink(userID, userName, userAvatar)
             })
+            this.setData({
+                linkWiteList: []
+            })
+        },
+        linkmicEvent(event, audienceIdList = null) {
+            const roomId = userBase.getGlobalData().roomId
+            const data = {
+                roomId: roomId,
+                timeStamp: new Date(),
+                event: event,
+                data: {
+                    audienceIdList: audienceIdList ? audienceIdList : [userBase.getGlobalData().preLinkUserInfo.userID]
+                }
+            }
+            roomService.linkmicEventPush(userBase.getGlobalData().sessionId, roomId, event, data).then(() => {}).catch(() => {})
         }
     }
 })

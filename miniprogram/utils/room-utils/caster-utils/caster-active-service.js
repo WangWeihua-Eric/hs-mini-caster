@@ -102,7 +102,7 @@ export class CasterActiveService {
     /**
      * 发送连麦权限
      */
-    sendLinkStatus(status) {
+    sendLinkStatus(status, time = 0) {
         const customMsg = {
             cmd: "CasterLinkOp",
             data: {
@@ -110,10 +110,19 @@ export class CasterActiveService {
             }
         }
         const strCustomMsg = JSON.stringify(customMsg);
-        webimhandler.sendCustomMsg({data: strCustomMsg, text: "notify"}, null)
-        setTimeout(() => {
-            webimhandler.sendCustomMsg({data: strCustomMsg, text: "notify"}, null)
-        }, 500)
+        if (!time) {
+            webimhandler.sendCustomMsg({data: strCustomMsg, text: "notify"}, function () {
+                setTimeout(() => {
+                    this.sendLinkStatus(status, 100)
+                }, 100)
+            })
+        } else if (time < 801) {
+            webimhandler.sendCustomMsg({data: strCustomMsg, text: "notify"}, function () {
+                setTimeout(() => {
+                    this.sendLinkStatus(status, time * 2)
+                }, time * 2)
+            })
+        }
     }
 
     /**

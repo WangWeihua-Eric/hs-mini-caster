@@ -40,7 +40,7 @@
                     </scroll-view>
                 </view>
                 <view wx:if="{{!inLink && canLink}}" class="wait-link f-c-jc-ac" bindtap="onShowSheet">
-                    <view class="wait-link-number" style="color: {{linkWiteList.length > 0 ? 'rgba(255,99,99,1)' : 'rgba(255,255,255,1)'}}">{{linkWiteList.length}}</view>
+                    <view class="wait-link-number" style="color:{{linkWiteList.length > 0 ? 'rgba(255,99,99,1)' : 'rgba(255,255,255,1)'}}">{{linkWiteList.length}}</view>
                     <view class="wait-lint-text">等待连麦</view>
                 </view>
             </view>
@@ -55,7 +55,12 @@
                     <image wx:if="{{!inLink}}" class="bottom-util" lazy-load="{{true}}"
                            src="{{beauty === 5 ? 'cloud://live-house-nodecloud.6c69-live-house-nodecloud-1301615752/beauty.png' : 'cloud://live-house-nodecloud.6c69-live-house-nodecloud-1301615752/cuty.png'}}"
                            bindtap="onChangeBeauty"></image>
-                    <view wx:if="{{inLink}}" class="close-link f-jc-ac" bindtap="onCloseLink">挂断</view>
+
+                    <view wx:if="{{inLink}}" class="f-c-jc-ac">
+                        <view class="time-des f-jc-ac">已接通 {{timeDes}}</view>
+                        <view class="close-link f-jc-ac" bindtap="onCloseLink">挂断</view>
+                    </view>
+
                     <image class="bottom-util" lazy-load="{{true}}"
                            src="{{frontCamera ? 'cloud://live-house-nodecloud.6c69-live-house-nodecloud-1301615752/switch-look.png' : 'cloud://live-house-nodecloud.6c69-live-house-nodecloud-1301615752/back-lock.png'}}"
                            bindtap="onSwitchCameraEvent"></image>
@@ -83,10 +88,17 @@
                     </view>
                 </view>
                 <view class="item-tag-content f-js-ac-w">
-                    <view class="sub-item f-jc-ac" wx:for="{{item.userTags}}" wx:for-item="subItem" wx:for-index="subIndex" wx:key="subIndex">{{subItem.tagName}}</view>
+                    <view class="sub-item f-jc-ac" wx:for="{{item.userTags}}" wx:for-item="subItem" wx:for-index="subIndex" wx:key="subIndex" style="background: {{subItem.color ? subItem.color : 'rgba(120,120,120, 0.26)'}}; padding: {{subItem.color ? '25rpx 25rpx' : '5rpx 25rpx'}};">{{subItem.color ? '' : subItem.tagName}}</view>
                 </view>
             </view>
             <view class="hidden-close-sheet f-jc-ac" bind:tap="onCloseSheet">关闭</view>
         </view>
     </van-action-sheet>
+
+    <view class="loading" hidden="{{notWaitLink}}">
+        <view class="loading-img">
+            <image src="cloud://live-house-nodecloud.6c69-live-house-nodecloud-1301615752/loading.png" class="rotate-img"></image>
+        </view>
+        <view class="loading-text">连麦建立中...</view>
+    </view>
 </view>

@@ -76,12 +76,35 @@ export class HttpUtil {
             }
         }
         return http(this.host + url, param, 'GET').then(res => {
-            //  调试开课弹窗用 不删
-            // if (url === '/course/api/schedules') {
-            //     res.result.data[5].courses[0].finishTime = 'PM 22:00'
-            //     res.result.data[5].courses[1].finishTime = 'PM 22:00'
-            // }
             return res.result
+        })
+    }
+
+    newGet(url, params) {
+        return new Promise((resolve, reject) => {
+            http(this.host + url, params, 'GET').then(res => {
+                if (res && res.result && res.result.state && res.result.state.code === '0') {
+                    resolve(res.result.data)
+                } else {
+                    reject(res)
+                }
+            }).catch(err => {
+                reject(err)
+            })
+        })
+    }
+
+    newPost(url, params) {
+        return new Promise((resolve, reject) => {
+            http(this.host + url, params, 'POST').then(res => {
+                if (res && res.result && res.result.state && res.result.state.code === '0') {
+                    resolve(res.result.data)
+                } else {
+                    reject(res)
+                }
+            }).catch(err => {
+                reject(err)
+            })
         })
     }
 }

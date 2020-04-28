@@ -238,15 +238,14 @@ Component({
             self.data.pusherContext && self.data.pusherContext.switchCamera({});
         },
 
-        onOpLinkEvent(event) {
+        onOpLinkEvent() {
             const self = _this
-            const res = event.detail
-            self.respondJoinAnchor(res.agree, res.audience)
+            const audience = userBase.getGlobalData().preLinkUserInfo
+            self.respondJoinAnchor(true, audience)
         },
 
         respondJoinAnchor(agree, audience) {
             console.info(`respondJoinAnchor(agree:${agree}, audience:${audience}) called`)
-            var self = _this;
             if (agree) {
                 liveroom.acceptJoinAnchor({
                     data: audience
@@ -266,6 +265,7 @@ Component({
                 onSketchpadData: self.onSketchpadData,
                 onKickoutJoinAnchor: self.onKickoutJoinAnchor,
                 onRequestJoinAnchor: self.onRequestJoinAnchor,
+                onCancelJoinAnchor: self.onCancelJoinAnchor,
                 onAnchorExit: self.onAnchorExit,
                 onAnchorEnter: self.onAnchorEnter,
                 onUserImgUpdate: self.onUserImgUpdate,
@@ -425,25 +425,18 @@ Component({
         },
         onRequestJoinAnchor(pusher) {
             const self = _this;
-
-            // const userId = pusher.userID
-            // wx.showModal({
-            //     content: userId
-            // })
             const requestJoinAnchorList = self.data.requestJoinAnchorList
             requestJoinAnchorList.push(pusher)
             self.setData({
                 requestJoinAnchorList: requestJoinAnchorList
             })
-
-            console.log({
-                tag: 'requestJoinAnchor',
-                code: 0,
-                detail: pusher
-            })
         },
-        onKickoutJoinAnchor() {
-            console.log('onKickoutJoinAnchor() called')
+        onCancelJoinAnchor(pusher) {
+            const self = _this;
+            const requestJoinAnchorList = self.data.requestJoinAnchorList.filter(item => item.userID !== pusher.userID)
+            self.setData({
+                requestJoinAnchorList: requestJoinAnchorList
+            })
         },
         enter() {
             var self = this;

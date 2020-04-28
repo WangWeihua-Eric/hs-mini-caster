@@ -161,4 +161,47 @@ export class RoomService {
             })
         })
     }
+
+    /**
+     * 提交当前连麦 / 挂断用户
+     */
+    linkmicEventPush(sessionId, roomId, event, data) {
+        const url = '/room/api/anchor/linkmic/eventpush'
+        const params = {
+            appSign: 'hongsongkebiao',
+            sessionId: sessionId,
+            roomId: roomId,
+            event: event,
+            data: JSON.stringify(data)
+        }
+        return this.http.newPost(url, params)
+    }
+
+    /**
+     * 查询用户标签颜色
+     */
+    getUserSelectColor(sessionId, userId, roomId, bindEvent='enterroom') {
+        const url = '/user/api/getusertag'
+        const params = {
+            appSign: 'hongsongkebiao',
+            sessionId: sessionId,
+            roomId: roomId,
+            bindEvent: bindEvent,
+            userId: userId
+        }
+        return this.http.newGet(url, params)
+    }
+
+    /**
+     * 查询当前连麦的人
+     */
+    querylinkmicOnmicList(sessionId, roomId) {
+        const roomIdTemp = roomId.replace('room_', '')
+        const url = '/room/api/linkmic/onmiclist'
+        const params = {
+            sessionId: sessionId,
+            roomId: roomIdTemp,
+        }
+        return this.http.newGet(url, params)
+    }
 }

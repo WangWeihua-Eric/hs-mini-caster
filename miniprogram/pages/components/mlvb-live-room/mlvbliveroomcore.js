@@ -57,6 +57,8 @@ var RoomServiceUrl = "https://liveroom.qcloud.com/weapp/live_room/",
         },		// 消息通知
         onRequestJoinAnchor: function () {
         }, //大主播收到小主播连麦请求通知
+        onCancelJoinAnchor: function () {
+        }, //   用户取消连麦通知
         onKickoutJoinAnchor: function () {
         }, //小主播被踢通知
         onRecvRoomCustomMsg: function () {
@@ -392,14 +394,6 @@ function receiveMsg(msg) {
         msg.fromAccountNick = '';
         msg.content = msg.content.split(';');
         msg.content = msg.content[0];
-        // event.onRecvRoomTextMsg && event.onRecvRoomTextMsg({
-        //     roomID: roomInfo.roomID,
-        //     userID: msg.fromAccountNick,
-        //     userName: msg.userName,
-        //     userAvatar: msg.userAvatar,
-        //     message: msg.content,
-        //     time: msg.time
-        // });
     } else {
         var contentObj, newContent;
         try {
@@ -407,9 +401,7 @@ function receiveMsg(msg) {
             contentObj = JSON.parse(newContent[0] + '}}');
         } catch (e) {
             console.warn("IM消息解析异常，重新按json格式解析");
-            newContent = new Array(1);
-            newContent[0] = msg.content;
-            contentObj = JSON.parse(msg.content);
+            return
         }
         if (contentObj.cmd === 'AudienceEnterRoom') {
             msg.userName = contentObj.data.nickName;
@@ -573,31 +565,43 @@ function emitUserImgUpdateMsg() {
 
 function recvC2CMsg(msg) {
     console.log("收到C2C消息:", JSON.stringify(msg));
-    var contentObj = JSON.parse(msg.content);
+    let contentObj
+    try {
+        contentObj = JSON.parse(msg.content);
+    } catch (e) {
+        return
+    }
     if (contentObj) {
-        if (contentObj.cmd == 'linkmic') {
-            if (contentObj.data.type && contentObj.data.type == 'request') {
+        if (contentObj.cmd === 'linkmic') {
+            if (contentObj.data.type && contentObj.data.type === 'request') {
                 event.onRequestJoinAnchor({
                     userID: msg.fromAccountNick,
                     userName: contentObj.data.userName,
                     userAvatar: contentObj.data.userAvatar
                 })
-            } else if (contentObj.data.type && contentObj.data.type == 'response') {
-                if (contentObj.data.result == 'accept') {
+            } else if (contentObj.data.type && contentObj.data.type === 'response') {
+                if (contentObj.data.result === 'accept') {
                     requestJoinCallback && requestJoinCallback({
                         errCode: 0,
                         errMsg: ''
                     });
-                } else if (contentObj.data.result == 'reject') {
+                } else if (contentObj.data.result === 'reject') {
                     requestJoinCallback && requestJoinCallback({
                         errCode: -999,
                         errMsg: '主播拒绝了你的请求'
                     });
                 }
-            } else if (contentObj.data.type && contentObj.data.type == 'kickout') {
+            } else if (contentObj.data.type && contentObj.data.type === 'kickout') {
                 event.onKickoutJoinAnchor && event.onKickoutJoinAnchor({
                     roomID: contentObj.data.roomID
                 });
+            } else if (contentObj.data.type && contentObj.data.type === 'cancel') {
+                //  用户取消连麦
+                event.onCancelJoinAnchor({
+                    userID: msg.fromAccountNick,
+                    userName: contentObj.data.userName,
+                    userAvatar: contentObj.data.userAvatar
+                })
             }
         }
     }
@@ -748,9 +752,7 @@ function sendRoomTextMsg(options) {
     webimhandler.sendCustomMsg({
         data: '{"cmd":"CustomTextMsg","data":{"nickName":"' + accountInfo.userName + '","headPic":"' + accountInfo.userAvatar + '"}}',
         text: options.data.msg
-    }, function () {
-        options.success && options.success();
-    });
+    }, null);
 }
 
 /**
@@ -932,6 +934,8 @@ function setListener(options) {
     event.onRecvRoomTextMsg = options.onRecvRoomTextMsg || function () {
     };
     event.onRequestJoinAnchor = options.onRequestJoinAnchor || function () {
+    };
+    event.onCancelJoinAnchor = options.onCancelJoinAnchor || function () {
     };
     event.onKickoutJoinAnchor = options.onKickoutJoinAnchor || function () {
     };
@@ -1368,23 +1372,44 @@ function requestJoinAnchor(object) {
     });
 }
 
-function acceptJoinAnchor(object) {
-    var body = {
+function acceptJoinAnchor(object, time = 0) {
+    const body = {
         cmd: 'linkmic',
         data: {
             type: 'response',
             result: 'accept',
             reason: '',
             roomID: roomInfo.roomID,
-            timestamp: Math.round(Date.now()) - mTimeDiff
+            timestamp: Math.round(Date.now()) - mTimeDiff,
+            sendTime: new Date().getTime()
         }
     }
 
-    var msg = {
+    const msg = {
         data: JSON.stringify(body)
     }
-    webimhandler.sendC2CCustomMsg(object.data.userID, msg, function (ret) {
-    });
+
+    if (!time) {
+        webimhandler.sendC2CCustomMsg(object.data.userID, msg, function (ret) {
+            if (ret && ret.errCode) {
+                console.log('连麦接受失败:', JSON.stringify(ret));
+                setTimeout(() => {
+                    acceptJoinAnchor(object, 100)
+                }, 100)
+                return;
+            }
+        });
+    } else if (time < 801) {
+        webimhandler.sendC2CCustomMsg(object.data.userID, msg, function (ret) {
+            if (ret && ret.errCode) {
+                console.log('连麦接受失败:', JSON.stringify(ret));
+                setTimeout(() => {
+                    acceptJoinAnchor(object, time * 2)
+                }, time * 2)
+                return;
+            }
+        });
+    }
 }
 
 function rejectJoinAnchor(object) {
@@ -1395,7 +1420,8 @@ function rejectJoinAnchor(object) {
             result: 'reject',
             reason: object.data.reason || '主播拒绝了您的连麦请求',
             roomID: roomInfo.roomID,
-            timestamp: Math.round(Date.now()) - mTimeDiff
+            timestamp: Math.round(Date.now()) - mTimeDiff,
+            sendTime: new Date().getTime()
         }
     }
 
